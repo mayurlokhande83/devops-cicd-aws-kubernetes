@@ -1,1 +1,74 @@
+pipeline {
+    agent any
+
+    environment {
+        AWS_REGION = "ap-south-1"
+        AWS_ACCOUNT_ID = "123456789012"
+        ECR_REPO = "flask-app"
+        IMAGE_TAG = "${env.BUILD_NUMBER}"
+        ECR_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+    }
+
+    stages {
+
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main', url: 'https://github.com/<your-username>/devops-cicd-aws-kubernetes.git'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh '''
+                  cd app
+                  docker build -t ${ECR_REPO}:${IMAGE_TAG} .
+                '''
+            }
+        }
+
+        stage('Authenticate to ECR') {
+            steps {
+                sh '''
+                  aws ecr get-login-password --region ${AWS_REGION} \
+                  | docker login --username AWS --password-stdin ${ECR_URI}
+                '''
+            }
+        }
+
+        stage('Tag & Push Image to ECR') {
+            steps {
+                sh '''
+                  docker tag ${ECR_REPO}:${IMAGE_TAG} ${ECR_URI}/${ECR_REPO}:${IMAGE_TAG}
+                  docker push ${ECR_URI}/${ECR_REPO}:${IMAGE_TAG}
+                '''
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                sh '''
+                  sed -i "s|image:.*|image: ${ECR_URI}/${ECR_REPO}:${IMAGE_TAG}|g" k8s/deployment.yaml
+                  kubectl apply -f k8s/
+                '''
+            }
+        }
+
+        stage('Verify Deployment') {
+            steps {
+                sh '''
+                  kubectl rollout status deployment/flask-app
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Deployment successful!"
+        }
+        failure {
+            echo "❌ Deployment failed!"
+        }
+    }
+}
 
