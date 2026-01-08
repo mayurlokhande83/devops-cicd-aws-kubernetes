@@ -16,53 +16,6 @@ The pipeline takes application code from **GitHub commit to live deployment** us
 
 ---
 
-## 🏗️ Architecture
-
-Developer
-   |
-   v
-GitHub Repo
-   |
-   v
-CI/CD Pipeline (Jenkins / GitHub Actions)
-   |
-   v
-Docker Build
-   |
-   v
-AWS ECR
-   |
-   v
-Kubernetes (EKS / EC2-based K8s)
-   |
-   v
-Application exposed via Ingress / LoadBalancer
-
-## 📁 Repository Structure
-
-devops-cicd-aws-kubernetes/
-│
-├── app/
-│ ├── app.py
-│ ├── requirements.txt
-│ └── Dockerfile
-│
-├── k8s/
-│ ├── deployment.yaml
-│ ├── service.yaml
-│ └── ingress.yaml
-│
-├── jenkins/
-│ └── Jenkinsfile
-│
-├── diagrams/
-│ └── architecture.png
-│
-└── README.md
-
-
----
-
 ## 🔄 CI/CD Pipeline Flow
 
 1. Developer pushes code to GitHub
